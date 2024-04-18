@@ -28,6 +28,8 @@ type Communicate struct {
 	receiveTimeout int
 }
 
+type CommunicateOption func(*Communicate) error
+
 // getHeadersAndData returns the headers and data from the given data.
 func getHeadersAndData(data interface{}) (map[string][]byte, []byte, error) {
 	var dataBytes []byte
@@ -192,7 +194,7 @@ func ValidateStringParam(paramName, paramValue, pattern string) (string, error) 
 }
 
 // NewCommunicate initializes the Communicate struct.
-func NewCommunicate(text string, options ...func(*Communicate) error) (*Communicate, error) {
+func NewCommunicate(text string, options ...CommunicateOption) (*Communicate, error) {
 	c := &Communicate{
 		text:           text,
 		voice:          "Microsoft Server Speech Text to Speech Voice (en-US, AriaNeural)",
@@ -214,7 +216,7 @@ func NewCommunicate(text string, options ...func(*Communicate) error) (*Communic
 }
 
 // SetVoice sets the voice for communication.
-func SetVoice(voice string) func(*Communicate) error {
+func SetVoice(voice string) CommunicateOption {
 	return func(c *Communicate) error {
 		//var err error
 		//c.voice, err = ValidateStringParam("voice", voice, `^Microsoft Server Speech Text to Speech Voice \(.+,.+\)$`)
@@ -225,7 +227,7 @@ func SetVoice(voice string) func(*Communicate) error {
 }
 
 // SetRate sets the rate for communication.
-func SetRate(rate string) func(*Communicate) error {
+func SetRate(rate string) CommunicateOption {
 	return func(c *Communicate) error {
 		var err error
 		c.rate, err = ValidateStringParam("rate", rate, `^[+-]\d+%$`)
@@ -234,7 +236,7 @@ func SetRate(rate string) func(*Communicate) error {
 }
 
 // SetVolume sets the volume for communication.
-func SetVolume(volume string) func(*Communicate) error {
+func SetVolume(volume string) CommunicateOption {
 	return func(c *Communicate) error {
 		var err error
 		c.volume, err = ValidateStringParam("volume", volume, `^[+-]\d+%$`)
@@ -243,7 +245,7 @@ func SetVolume(volume string) func(*Communicate) error {
 }
 
 // SetPitch sets the pitch for communication.
-func SetPitch(pitch string) func(*Communicate) error {
+func SetPitch(pitch string) CommunicateOption {
 	return func(c *Communicate) error {
 		var err error
 		c.pitch, err = ValidateStringParam("pitch", pitch, `^[+-]\d+Hz$`)
@@ -252,7 +254,7 @@ func SetPitch(pitch string) func(*Communicate) error {
 }
 
 // SetProxy sets the proxy for communication.
-func SetProxy(proxy string) func(*Communicate) error {
+func SetProxy(proxy string) CommunicateOption {
 	return func(c *Communicate) error {
 		c.proxy = proxy
 		return nil
@@ -260,7 +262,7 @@ func SetProxy(proxy string) func(*Communicate) error {
 }
 
 // SetReceiveTimeout sets the receive timeout for communication.
-func SetReceiveTimeout(receiveTimeout int) func(*Communicate) error {
+func SetReceiveTimeout(receiveTimeout int) CommunicateOption {
 	return func(c *Communicate) error {
 		c.receiveTimeout = receiveTimeout
 		return nil

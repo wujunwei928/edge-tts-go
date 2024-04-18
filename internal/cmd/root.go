@@ -64,9 +64,20 @@ var rootCmd = &cobra.Command{
 			inputText = string(fileContent)
 		}
 
+		connOptions := []edge_tts.CommunicateOption{
+			edge_tts.SetVoice(voice),
+			edge_tts.SetRate(rate),
+			edge_tts.SetVolume(volume),
+			edge_tts.SetPitch(pitch),
+			edge_tts.SetReceiveTimeout(20),
+		}
+		if len(proxyURL) > 0 {
+			connOptions = append(connOptions, edge_tts.SetProxy(proxyURL))
+		}
+
 		conn, err := edge_tts.NewCommunicate(
 			inputText,
-			edge_tts.SetVoice(voice),
+			connOptions...,
 		)
 		if err != nil {
 			return err

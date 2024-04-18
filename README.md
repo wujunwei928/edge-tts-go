@@ -53,9 +53,9 @@ It is possible to make minor changes to the generated speech.
 
 ## go module
 
-It is possible to use the `edge-tts-go` module directly from go. For a list of example applications:
+It is possible to use the `edge-tts-go` module directly from go. look the following file:
 
-* https://github.com/wujunwei928/edge-tts-go/edgeTTS
+* https://github.com/wujunwei928/edge-tts-go/blob/main/internal/cmd/root.go
 
 ## thanks
 
