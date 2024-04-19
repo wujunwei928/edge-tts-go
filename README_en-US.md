@@ -3,27 +3,27 @@
 [中文](https://github.com/wujunwei928/edge-tts-go/blob/main/README.md)
 [English](https://github.com/wujunwei928/edge-tts-go/blob/main/README_en-US.md)
 
-`edge-tts-go` 是一个 golang 模块，允许您从 golang 代码中或使用提供的 `edge-tts-go` 命令使用 Microsoft Edge 的在线文本到语音服务。
+`edge-tts-go` is a golang module that allows you to use Microsoft Edge's online text-to-speech service from within your golang code or using the provided `edge-tts-go` command.
 
 ## Installation
 
-要安装它，请运行以下命令：
+To install it, run the following command:
 
     $ go install github.com/wujunwei928/edge-tts-go
 
-## 用法
+## Usage
 
-### 基本用法
+### Basic usage
 
-如果您想使用 `edge-tts-go` 命令，只需使用以下命令运行它：
+If you want to use the `edge-tts-go` command, you can simply run it with the following command:
 
     $ edge-tts-go --text "Hello, world" --write-media hello.mp3
 
-### 改变声音
+### Changing the voice
 
-如果您想更改转换文本时使用的声音。
+If you want to change the language of the speech or more generally, the voice. 
 
-您需要使用 `--list-voices` 选项检查可用的语音：
+You must first check the available voices with the `--list-voices` option:
 
     $ edge-tts-go --list-voices
     Name: Microsoft Server Speech Text to Speech Voice (zh-CN, XiaoxiaoNeural)
@@ -42,25 +42,24 @@
 
     ...
 
-使用 `--voice` 选项指定声音进行转换
-
     $ edge-tts-go --voice zh-CN-XiaoxiaoNeural --text "纵使浮云蔽天日，我亦拔剑破长空" --write-media hello_in_chinese.mp3
 
-    如果你的电脑安装过ffplay，你可以使用以下命令直接播放音频文件:
+    if you already install ffplay in your computer, you can play the audio file with the following command:
     $ edge-tts-go --voice zh-CN-XiaoxiaoNeural --text "纵使浮云蔽天日，我亦拔剑破长空" | ffplay -i -
+### Changing rate, volume and pitch
 
-### 改变速率、音量和音调
+It is possible to make minor changes to the generated speech.
 
     $ edge-tts-go --rate=-50% --text "Hello, world" --write-media hello_with_rate_halved.mp3
     $ edge-tts-go --volume=-50% --text "Hello, world" --write-media hello_with_volume_halved.mp3
     $ edge-tts-go --pitch=-50Hz --text "Hello, world" --write-media hello_with_pitch_halved.mp3
 
-## go 模块
+## go module
 
-可以直接在go代码中使用 `edge-tts-go` 模块， 从下面的文件查看调用方法:
+It is possible to use the `edge-tts-go` module directly from go. look the following file:
 
 * https://github.com/wujunwei928/edge-tts-go/blob/main/internal/cmd/root.go
 
-## 致谢
+## thanks
 
 * https://github.com/rany2/edge-tts
