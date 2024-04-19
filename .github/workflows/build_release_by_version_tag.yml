@@ -1,0 +1,62 @@
+name: edge-tts-go Build Release By Version Tag
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - '0.*' # Push events to matching 0.*, i.e. 0.1.0, 0.1.1
+
+env:
+  TZ: Asia/Shanghai
+  REPO_NAME: ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}
+
+jobs:
+  build:
+    name: Build And Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get git tag version
+        id: get_tag_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Checkout Github Code
+        uses: actions/checkout@v3
+
+      - name: Set Up Golang Environment
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.21
+
+      - name: Build CLI Binary
+        run: |
+          GOARCH=amd64
+          for goOs in linux windows darwin;\
+          do echo "Building ${goOs} amd64 binary...";\
+          GOOS=$goOs;\
+          outputFile="${REPO_NAME}";\
+          if [[ ${GOOS} =~ 'windows' ]];\
+          then outputFile="${REPO_NAME}.exe";\
+          fi;\
+          go build -o $outputFile;\
+          tar -zcvf ${REPO_NAME}-${{ steps.get_tag_version.outputs.VERSION }}-${GOOS}-${GOARCH}.tar.gz ${outputFile};\
+          rm ${outputFile};\
+          done
+
+      - name: Create Github Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name:     ${{ github.ref }}
+          release_name: ${REPO_NAME} Release ${{ github.ref }}
+          draft:        false
+          prerelease:   false
+
+      - name: Upload Release Asset
+        id:   upload-release-asset
+        uses: alexellis/upload-assets@0.2.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_paths: "${REPO_NAME}*.tar.gz"
