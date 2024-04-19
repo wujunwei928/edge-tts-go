@@ -1,7 +1,7 @@
 # edge-tts-go
 
-[中文](https://github.com/wujunwei928/edge-tts-go/blob/main/README.md)
-[English](https://github.com/wujunwei928/edge-tts-go/blob/main/README_en-US.md)
+* [中文](https://github.com/wujunwei928/edge-tts-go/blob/main/README.md)
+* [English](https://github.com/wujunwei928/edge-tts-go/blob/main/README_en-US.md)
 
 `edge-tts-go` 是一个 golang 模块，允许您从 golang 代码中或使用提供的 `edge-tts-go` 命令使用 Microsoft Edge 的在线文本到语音服务。
 
