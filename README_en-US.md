@@ -7,9 +7,13 @@
 
 ## Installation
 
+### go install
 To install it, run the following command:
 
     $ go install github.com/wujunwei928/edge-tts-go
+
+### download release
+    https://github.com/wujunwei928/edge-tts-go/releases
 
 ## Usage
 
