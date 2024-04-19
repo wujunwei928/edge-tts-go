@@ -8,16 +8,19 @@ on:
 
 env:
   TZ: Asia/Shanghai
-  REPO_NAME: ${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}
 
 jobs:
   build:
     name: Build And Release
     runs-on: ubuntu-latest
     steps:
+      - name: Get git repo name
+        id: get_repo_name
+        run: echo "REPO_NAME=${GITHUB_REPOSITORY#$GITHUB_REPOSITORY_OWNER/}" >> $GITHUB_OUTPUT
+
       - name: Get git tag version
         id: get_tag_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
 
       - name: Checkout Github Code
         uses: actions/checkout@v3
@@ -29,27 +32,26 @@ jobs:
 
       - name: Build CLI Binary
         run: |
-          GOARCH=amd64
           for goOs in linux windows darwin;\
           do echo "Building ${goOs} amd64 binary...";\
-          GOOS=$goOs;\
-          outputFile="${REPO_NAME}";\
-          if [[ ${GOOS} =~ 'windows' ]];\
-          then outputFile="${REPO_NAME}.exe";\
+          outputFile="${{ steps.get_repo_name.outputs.REPO_NAME }}";\
+          if [[ ${goOs} =~ 'windows' ]];\
+          then outputFile="${{ steps.get_repo_name.outputs.REPO_NAME }}.exe";\
           fi;\
-          go build -o $outputFile;\
-          tar -zcvf ${REPO_NAME}-${{ steps.get_tag_version.outputs.VERSION }}-${GOOS}-${GOARCH}.tar.gz ${outputFile};\
+          goArch=amd64
+          GOOS=$goOs GOARCH=$goArch go build -o $outputFile;\
+          tar -zcvf ${{ steps.get_repo_name.outputs.REPO_NAME }}-${{ steps.get_tag_version.outputs.VERSION }}-${goOs}-${goArch}.tar.gz ${outputFile};\
           rm ${outputFile};\
           done
 
       - name: Create Github Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          name: "${{ steps.get_repo_name.outputs.REPO_NAME }} Release ${{ steps.get_tag_version.outputs.VERSION }}"
           tag_name:     ${{ github.ref }}
-          release_name: ${REPO_NAME} Release ${{ github.ref }}
           draft:        false
           prerelease:   false
 
