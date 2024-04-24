@@ -248,7 +248,7 @@ func SetVolume(volume string) CommunicateOption {
 func SetPitch(pitch string) CommunicateOption {
 	return func(c *Communicate) error {
 		var err error
-		c.pitch, err = ValidateStringParam("pitch", pitch, `^[+-]\d+Hz$`)
+		c.pitch, err = ValidateStringParam("pitch", pitch, `^[+-]\d+(Hz|%)$`)
 		return err
 	}
 }
