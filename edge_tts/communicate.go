@@ -6,8 +6,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"net/url"
@@ -15,6 +13,9 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 // Communicate is a struct representing communication with the service.
@@ -147,7 +148,9 @@ func splitTextByByteLength(text []byte, byteLength int) [][]byte {
 
 // mkSSML creates an SSML string from the given parameters.
 func mkSSML(text string, voice string, rate string, volume string, pitch string) string {
-	ssml := fmt.Sprintf("<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'><voice name='%s'><prosody pitch='%s' rate='%s' volume='%s'>%s</prosody></voice></speak>", voice, pitch, rate, volume, text)
+	ssml := fmt.Sprintf(
+		"<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='en-US'>"+
+			"<voice name='%s'><prosody pitch='%s' rate='%s' volume='%s'>%s</prosody></voice></speak>", voice, pitch, rate, volume, text)
 	return ssml
 }
 
@@ -284,13 +287,9 @@ func (c *Communicate) newWebSocketConn() (*websocket.Conn, error) {
 		dialer.Proxy = http.ProxyURL(proxyURL)
 	}
 
-	header := http.Header{
-		"Pragma":          []string{"no-cache"},
-		"Cache-Control":   []string{"no-cache"},
-		"Origin":          []string{"chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold"},
-		"Accept-Encoding": []string{"gzip, deflate, br"},
-		"Accept-Language": []string{"en-US,en;q=0.9"},
-		"User-Agent":      []string{"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41"},
+	header := http.Header{}
+	for k, v := range WSS_HEADERS {
+		header.Set(k, v)
 	}
 
 	dialCtx, dialContextCancel := context.WithTimeout(context.Background(), time.Duration(c.receiveTimeout)*time.Second)
@@ -298,7 +297,7 @@ func (c *Communicate) newWebSocketConn() (*websocket.Conn, error) {
 		dialContextCancel()
 	}()
 
-	reqUrl := WSS_URL + "&ConnectionId=" + connectID()
+	reqUrl := fmt.Sprintf("%s&Sec-MS-GEC=%s&Sec-MS-GEC-Version=%s&ConnectionId=%s", WSS_URL, GenerateSecMSGec(), SEC_MS_GEC_VERSION, connectID())
 	conn, _, err := dialer.DialContext(dialCtx, reqUrl, header)
 	if err != nil {
 		return nil, err
@@ -390,7 +389,7 @@ func (c *Communicate) getCommandRequestContent() string {
 
 	// 拼接JSON部分
 	builder.WriteString(`{"context":{"synthesis":{"audio":{"metadataoptions":{`)
-	builder.WriteString(`"sentenceBoundaryEnabled":false,"wordBoundaryEnabled":true},`)
+	builder.WriteString(`"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"true"},`)
 	builder.WriteString(`"outputFormat":"audio-24khz-48kbitrate-mono-mp3"`)
 	builder.WriteString("}}}}\r\n")
 

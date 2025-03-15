@@ -3,6 +3,7 @@ package edge_tts
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/go-resty/resty/v2"
 )
 
@@ -28,21 +29,17 @@ func ListVoices(proxyURL string) ([]Voice, error) {
 		client.SetProxy(proxyURL)
 	}
 
+	voiceListUrl := fmt.Sprintf(
+		"%s&Sec-MS-GEC=%s&Sec-MS-GEC-Version=%s",
+		VOICE_LIST_URL,
+		GenerateSecMSGec(),
+		SEC_MS_GEC_VERSION,
+	)
+
 	resp, err := client.R().
 		EnableTrace().
-		SetHeaders(map[string]string{
-			"Authority":        "speech.platform.bing.com",
-			"Sec-CH-UA":        `" Not;A Brand";v="99", "Microsoft Edge";v="91", "Chromium";v="91"`,
-			"Sec-CH-UA-Mobile": "?0",
-			"User-Agent":       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.77 Safari/537.36 Edg/91.0.864.41",
-			"Accept":           "*/*",
-			"Sec-Fetch-Site":   "none",
-			"Sec-Fetch-Mode":   "cors",
-			"Sec-Fetch-Dest":   "empty",
-			"Accept-Encoding":  "gzip, deflate, br",
-			"Accept-Language":  "en-US,en;q=0.9",
-		}).
-		Get(VOICE_LIST_URL)
+		SetHeaders(VOICE_HEADERS).
+		Get(voiceListUrl)
 
 	if err != nil {
 		return nil, err
