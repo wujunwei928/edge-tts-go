@@ -126,4 +126,6 @@ func init() {
 	rootCmd.Flags().StringVar(&writeMedia, "write-media", "", "send media output to file instead of stdout")
 	rootCmd.Flags().StringVar(&proxyURL, "proxy", "", "use a proxy for TTS and voice list")
 	rootCmd.Flags().BoolVar(&listVoices, "list-voices", false, "lists available voices and exits")
+
+	rootCmd.AddCommand(webCmd)
 }
