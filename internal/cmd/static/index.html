@@ -289,7 +289,28 @@
             }
         }
 
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group--locale {
+            flex: 0 0 180px;
+        }
+
+        .form-row .form-group--voice {
+            flex: 1;
+        }
+
         @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .form-row .form-group--locale {
+                flex: none;
+            }
             .container {
                 padding: 10px;
             }
@@ -329,13 +350,15 @@
                 <label for="textInput">文本内容</label>
                 <textarea id="textInput" rows="5" placeholder="请输入要转换的文本..."></textarea>
             </div>
-            <div class="form-group">
-                <label for="localeSelect">地区</label>
-                <select id="localeSelect"><option>加载中...</option></select>
-            </div>
-            <div class="form-group">
-                <label for="voiceSelect">语音</label>
-                <select id="voiceSelect"><option>加载中...</option></select>
+            <div class="form-row">
+                <div class="form-group form-group--locale">
+                    <label for="localeSelect">地区</label>
+                    <select id="localeSelect"><option>加载中...</option></select>
+                </div>
+                <div class="form-group form-group--voice">
+                    <label for="voiceSelect">语音</label>
+                    <select id="voiceSelect"><option>加载中...</option></select>
+                </div>
             </div>
             <div class="form-group">
                 <label>语速: <span id="rateValue">+0%</span></label>
