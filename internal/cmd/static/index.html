@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>edge-tts-go Web TTS</title>
+    <style>
+        :root {
+            --primary-color: #4A90D9;
+            --primary-hover: #357ABD;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+            --error-color: #e74c3c;
+            --error-bg: #ffeaea;
+            --gray-light: #f5f5f5;
+            --gray-medium: #999999;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--gray-light);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        main {
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: var(--bg-color);
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: 8px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--primary-hover);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--gray-medium);
+            cursor: not-allowed;
+        }
+
+        .error-msg {
+            background-color: var(--error-bg);
+            color: var(--error-color);
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 16px;
+            font-size: 14px;
+            border-left: 4px solid var(--error-color);
+        }
+
+        #historySection {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        #historySection h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-color);
+        }
+
+        #historyList {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            background-color: var(--gray-light);
+            border-radius: 8px;
+            transition: background-color 0.3s;
+        }
+
+        .history-item:hover {
+            background-color: #ececec;
+        }
+
+        .history-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .history-text {
+            font-size: 14px;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-meta {
+            font-size: 12px;
+            color: var(--gray-medium);
+            margin-top: 4px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 12px;
+        }
+
+        .history-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-play {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-play:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn-delete {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: var(--gray-medium);
+            padding: 30px;
+            font-size: 14px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray-medium);
+            font-size: 13px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            header h1 {
+                font-size: 22px;
+            }
+
+            main {
+                padding: 20px;
+            }
+
+            .form-group label {
+                font-size: 14px;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .history-actions {
+                margin-left: 0;
+                margin-top: 10px;
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>edge-tts-go Web TTS</h1>
+        </header>
+        <main>
+            <div class="form-group">
+                <label for="textInput">文本内容</label>
+                <textarea id="textInput" rows="5" placeholder="请输入要转换的文本..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="voiceSelect">语音</label>
+                <select id="voiceSelect"><option>加载中...</option></select>
+            </div>
+            <div class="form-group">
+                <label>语速: <span id="rateValue">+0%</span></label>
+                <input type="range" id="rateSlider" min="-100" max="300" value="0">
+            </div>
+            <div class="form-group">
+                <label>音量: <span id="volumeValue">+0%</span></label>
+                <input type="range" id="volumeSlider" min="-100" max="100" value="0">
+            </div>
+            <div class="form-group">
+                <label>音调: <span id="pitchValue">+0Hz</span></label>
+                <input type="range" id="pitchSlider" min="-50" max="50" value="0">
+            </div>
+            <button id="generateBtn" class="btn-primary">生成并播放</button>
+            <div id="errorMsg" class="error-msg" style="display:none"></div>
+            <audio id="audioPlayer" style="display:none"></audio>
+            <section id="historySection">
+                <h2>历史记录</h2>
+                <div id="historyList"></div>
+            </section>
+        </main>
+        <footer>
+            <p>edge-tts-go · Microsoft Edge TTS</p>
+        </footer>
+    </div>
+    <script>
+        // DOM 元素
+        const textInput = document.getElementById('textInput');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const rateSlider = document.getElementById('rateSlider');
+        const rateValue = document.getElementById('rateValue');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        const pitchSlider = document.getElementById('pitchSlider');
+        const pitchValue = document.getElementById('pitchValue');
+        const generateBtn = document.getElementById('generateBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const historyList = document.getElementById('historyList');
+
+        // 常量
+        const HISTORY_KEY = 'edge-tts-history';
+        const MAX_HISTORY = 50;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVoices();
+            loadHistory();
+            setupSliders();
+        });
+
+        // 加载语音列表
+        async function loadVoices() {
+            try {
+                const response = await fetch('/api/voices');
+                if (!response.ok) throw new Error('获取语音列表失败');
+
+                const voices = await response.json();
+                renderVoiceSelect(voices);
+            } catch (error) {
+                showError('无法加载语音列表: ' + error.message);
+                voiceSelect.innerHTML = '<option>加载失败</option>';
+            }
+        }
+
+        // 渲染语音选择器（按 Locale 分组）
+        function renderVoiceSelect(voices) {
+            const groups = {};
+
+            voices.forEach(voice => {
+                const locale = voice.Locale || 'Unknown';
+                if (!groups[locale]) {
+                    groups[locale] = [];
+                }
+                groups[locale].push(voice);
+            });
+
+            voiceSelect.innerHTML = '';
+
+            const sortedLocales = Object.keys(groups).sort();
+
+            sortedLocales.forEach(locale => {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = locale;
+
+                groups[locale].forEach(voice => {
+                    const option = document.createElement('option');
+                    option.value = voice.ShortName;
+                    option.textContent = voice.ShortName;
+                    if (voice.ShortName === 'zh-CN-XiaoxiaoNeural') {
+                        option.selected = true;
+                    }
+                    optgroup.appendChild(option);
+                });
+
+                voiceSelect.appendChild(optgroup);
+            });
+        }
+
+        // 设置滑块事件
+        function setupSliders() {
+            rateSlider.addEventListener('input', () => {
+                rateValue.textContent = formatPercent(rateSlider.value);
+            });
+
+            volumeSlider.addEventListener('input', () => {
+                volumeValue.textContent = formatPercent(volumeSlider.value);
+            });
+
+            pitchSlider.addEventListener('input', () => {
+                pitchValue.textContent = formatHz(pitchSlider.value);
+            });
+        }
+
+        // 格式化百分比
+        function formatPercent(value) {
+            const num = parseInt(value, 10);
+            return (num >= 0 ? '+' : '') + num + '%';
+        }
+
+        // 格式化 Hz
+        function formatHz(value) {
+            const num = parseInt(value, 10);
+            return (num >= 0 ? '+' : '') + num + 'Hz';
+        }
+
+        // 生成按钮点击事件
+        generateBtn.addEventListener('click', async () => {
+            const text = textInput.value.trim();
+            if (!text) {
+                showError('请输入文本内容');
+                return;
+            }
+
+            hideError();
+            setLoading(true);
+
+            const params = {
+                text: text,
+                voice: voiceSelect.value,
+                rate: formatPercent(rateSlider.value),
+                volume: formatPercent(volumeSlider.value),
+                pitch: formatHz(pitchSlider.value)
+            };
+
+            try {
+                const response = await fetch('/api/tts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(params)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || '生成失败');
+                }
+
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audioData = await blobToBase64(audioBlob);
+
+                // 播放音频
+                audioPlayer.src = audioUrl;
+                audioPlayer.play();
+
+                // 保存历史记录
+                saveHistory({
+                    id: Date.now(),
+                    text: text,
+                    voice: params.voice,
+                    rate: params.rate,
+                    volume: params.volume,
+                    pitch: params.pitch,
+                    timestamp: new Date().toISOString(),
+                    audioData: audioData
+                });
+
+            } catch (error) {
+                showError('生成失败: ' + error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        // Blob 转 Base64
+        function blobToBase64(blob) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+            });
+        }
+
+        // 显示错误
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+        }
+
+        // 隐藏错误
+        function hideError() {
+            errorMsg.style.display = 'none';
+        }
+
+        // 设置加载状态
+        function setLoading(loading) {
+            generateBtn.disabled = loading;
+            if (loading) {
+                generateBtn.innerHTML = '<span class="loading"></span>生成中...';
+            } else {
+                generateBtn.textContent = '生成并播放';
+            }
+        }
+
+        // 保存历史记录
+        function saveHistory(item) {
+            let history = getHistory();
+
+            // 添加到开头
+            history.unshift(item);
+
+            // 限制数量
+            if (history.length > MAX_HISTORY) {
+                history = history.slice(0, MAX_HISTORY);
+            }
+
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            renderHistory();
+        }
+
+        // 获取历史记录
+        function getHistory() {
+            try {
+                const data = localStorage.getItem(HISTORY_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        // 加载历史记录
+        function loadHistory() {
+            renderHistory();
+        }
+
+        // 渲染历史记录
+        function renderHistory() {
+            const history = getHistory();
+
+            if (history.length === 0) {
+                historyList.innerHTML = '<div class="empty-history">暂无历史记录</div>';
+                return;
+            }
+
+            historyList.innerHTML = history.map(item => `
+                <div class="history-item" data-id="${item.id}">
+                    <div class="history-info">
+                        <div class="history-text">${escapeHtml(truncateText(item.text, 50))}</div>
+                        <div class="history-meta">${item.voice} · ${item.rate} · ${item.volume}</div>
+                    </div>
+                    <div class="history-actions">
+                        <button class="history-btn btn-play" onclick="playHistory(${item.id})">播放</button>
+                        <button class="history-btn btn-delete" onclick="deleteHistory(${item.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 播放历史记录
+        function playHistory(id) {
+            const history = getHistory();
+            const item = history.find(h => h.id === id);
+
+            if (item && item.audioData) {
+                audioPlayer.src = item.audioData;
+                audioPlayer.play();
+            }
+        }
+
+        // 删除历史记录
+        function deleteHistory(id) {
+            let history = getHistory();
+            history = history.filter(h => h.id !== id);
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+            renderHistory();
+        }
+
+        // 截断文本
+        function truncateText(text, maxLength) {
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+
+        // HTML 转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
