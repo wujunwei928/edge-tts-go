@@ -264,6 +264,36 @@
             font-size: 14px;
         }
 
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .page-btn {
+            padding: 6px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color);
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 13px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .page-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .page-info {
+            font-size: 13px;
+            color: var(--gray-medium);
+        }
+
         footer {
             text-align: center;
             padding: 20px;
@@ -378,6 +408,7 @@
             <section id="historySection">
                 <h2>历史记录</h2>
                 <div id="historyList"></div>
+                <div id="historyPagination"></div>
             </section>
         </main>
         <footer>
@@ -403,6 +434,8 @@
         // 常量
         const HISTORY_KEY = 'edge-tts-history';
         const MAX_HISTORY = 50;
+        const PAGE_SIZE = 10;
+        let currentPage = 1;
 
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
@@ -634,16 +667,23 @@
             renderHistory();
         }
 
-        // 渲染历史记录
+        // 渲染历史记录（带分页）
         function renderHistory() {
             const history = getHistory();
 
             if (history.length === 0) {
                 historyList.innerHTML = '<div class="empty-history">暂无历史记录</div>';
+                document.getElementById('historyPagination').innerHTML = '';
                 return;
             }
 
-            historyList.innerHTML = history.map(item => `
+            const totalPages = Math.ceil(history.length / PAGE_SIZE);
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * PAGE_SIZE;
+            const pageItems = history.slice(start, start + PAGE_SIZE);
+
+            historyList.innerHTML = pageItems.map(item => `
                 <div class="history-item" data-id="${item.id}">
                     <div class="history-info">
                         <div class="history-text">${escapeHtml(truncateText(item.text, 50))}</div>
@@ -655,6 +695,34 @@
                     </div>
                 </div>
             `).join('');
+
+            renderPagination(totalPages);
+        }
+
+        // 渲染分页控件
+        function renderPagination(totalPages) {
+            const container = document.getElementById('historyPagination');
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let html = '<div class="pagination">';
+            if (currentPage > 1) {
+                html += `<button class="page-btn" onclick="goPage(${currentPage - 1})">上一页</button>`;
+            }
+            html += `<span class="page-info">${currentPage} / ${totalPages}</span>`;
+            if (currentPage < totalPages) {
+                html += `<button class="page-btn" onclick="goPage(${currentPage + 1})">下一页</button>`;
+            }
+            html += '</div>';
+            container.innerHTML = html;
+        }
+
+        function goPage(page) {
+            currentPage = page;
+            renderHistory();
+            document.getElementById('historySection').scrollIntoView({ behavior: 'smooth' });
         }
 
         // 播放历史记录
