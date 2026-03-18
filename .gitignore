@@ -20,6 +20,12 @@
 # Go workspace file
 go.work
 
+# 编译产物
+edge-tts-go
+
+# 测试输出
+*.mp3
+
 # editor
 .idea
 
