@@ -330,6 +330,10 @@
                 <textarea id="textInput" rows="5" placeholder="请输入要转换的文本..."></textarea>
             </div>
             <div class="form-group">
+                <label for="localeSelect">地区</label>
+                <select id="localeSelect"><option>加载中...</option></select>
+            </div>
+            <div class="form-group">
                 <label for="voiceSelect">语音</label>
                 <select id="voiceSelect"><option>加载中...</option></select>
             </div>
@@ -360,6 +364,7 @@
     <script>
         // DOM 元素
         const textInput = document.getElementById('textInput');
+        const localeSelect = document.getElementById('localeSelect');
         const voiceSelect = document.getElementById('voiceSelect');
         const rateSlider = document.getElementById('rateSlider');
         const rateValue = document.getElementById('rateValue');
@@ -381,6 +386,7 @@
             loadVoices();
             loadHistory();
             setupSliders();
+            setupLocaleSelect();
         });
 
         // 加载语音列表
@@ -390,44 +396,66 @@
                 if (!response.ok) throw new Error('获取语音列表失败');
 
                 const voices = await response.json();
-                renderVoiceSelect(voices);
+                // 缓存完整语音列表
+                window._allVoices = voices;
+                renderLocaleSelect(voices);
             } catch (error) {
                 showError('无法加载语音列表: ' + error.message);
+                localeSelect.innerHTML = '<option>加载失败</option>';
                 voiceSelect.innerHTML = '<option>加载失败</option>';
             }
         }
 
-        // 渲染语音选择器（按 Locale 分组）
-        function renderVoiceSelect(voices) {
-            const groups = {};
-
+        // 渲染地区选择器，zh-CN 排在首位
+        function renderLocaleSelect(voices) {
+            const localeMap = {};
             voices.forEach(voice => {
                 const locale = voice.Locale || 'Unknown';
-                if (!groups[locale]) {
-                    groups[locale] = [];
-                }
-                groups[locale].push(voice);
+                localeMap[locale] = true;
             });
 
+            const allLocales = Object.keys(localeMap).sort();
+            // zh-CN 提到最前面
+            const sortedLocales = [];
+            if (localeMap['zh-CN']) {
+                sortedLocales.push('zh-CN');
+            }
+            allLocales.forEach(locale => {
+                if (locale !== 'zh-CN') sortedLocales.push(locale);
+            });
+
+            localeSelect.innerHTML = '<option value="">全部</option>';
+            sortedLocales.forEach(locale => {
+                const option = document.createElement('option');
+                option.value = locale;
+                option.textContent = locale;
+                if (locale === 'zh-CN') option.selected = true;
+                localeSelect.appendChild(option);
+            });
+
+            // 默认选中 zh-CN，过滤语音
+            filterVoicesByLocale('zh-CN');
+        }
+
+        // 按地区过滤语音列表
+        function filterVoicesByLocale(locale) {
+            const voices = window._allVoices || [];
+            const filtered = locale ? voices.filter(v => v.Locale === locale) : voices;
+            renderVoiceSelect(filtered, locale === 'zh-CN');
+        }
+
+        // 渲染语音选择器
+        function renderVoiceSelect(voices, preferZhCN) {
             voiceSelect.innerHTML = '';
 
-            const sortedLocales = Object.keys(groups).sort();
-
-            sortedLocales.forEach(locale => {
-                const optgroup = document.createElement('optgroup');
-                optgroup.label = locale;
-
-                groups[locale].forEach(voice => {
-                    const option = document.createElement('option');
-                    option.value = voice.ShortName;
-                    option.textContent = voice.ShortName;
-                    if (voice.ShortName === 'zh-CN-XiaoxiaoNeural') {
-                        option.selected = true;
-                    }
-                    optgroup.appendChild(option);
-                });
-
-                voiceSelect.appendChild(optgroup);
+            voices.forEach(voice => {
+                const option = document.createElement('option');
+                option.value = voice.ShortName;
+                option.textContent = voice.ShortName;
+                if (voice.ShortName === 'zh-CN-XiaoxiaoNeural') {
+                    option.selected = true;
+                }
+                voiceSelect.appendChild(option);
             });
         }
 
@@ -443,6 +471,13 @@
 
             pitchSlider.addEventListener('input', () => {
                 pitchValue.textContent = formatHz(pitchSlider.value);
+            });
+        }
+
+        // 设置地区选择器事件
+        function setupLocaleSelect() {
+            localeSelect.addEventListener('change', () => {
+                filterVoicesByLocale(localeSelect.value);
             });
         }
 
