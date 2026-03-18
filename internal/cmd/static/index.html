@@ -438,14 +438,10 @@
             });
 
             const allLocales = Object.keys(localeMap).sort();
-            // zh-CN 提到最前面
-            const sortedLocales = [];
-            if (localeMap['zh-CN']) {
-                sortedLocales.push('zh-CN');
-            }
-            allLocales.forEach(locale => {
-                if (locale !== 'zh-CN') sortedLocales.push(locale);
-            });
+            // zh-* 开头的地区排在前面
+            const zhLocales = allLocales.filter(l => l.startsWith('zh-'));
+            const otherLocales = allLocales.filter(l => !l.startsWith('zh-'));
+            const sortedLocales = [...zhLocales, ...otherLocales];
 
             localeSelect.innerHTML = '<option value="">全部</option>';
             sortedLocales.forEach(locale => {
