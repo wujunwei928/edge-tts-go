@@ -3,23 +3,27 @@ package cmd
 import (
 	"bytes"
 	"errors"
-	"github.com/spf13/cobra"
-	"github.com/wujunwei928/edge-tts-go/edge_tts"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/wujunwei928/edge-tts-go/edge_tts"
 )
 
 var (
-	listVoices bool
-	text       string
-	file       string
-	voice      string
-	rate       string
-	volume     string
-	pitch      string
-	wordsInCue float64
-	writeMedia string
-	proxyURL   string // 是否使用代理
+	listVoices  bool
+	text        string
+	file        string
+	voice       string
+	rate        string
+	volume      string
+	pitch       string
+	wordsInCue  float64
+	writeMedia  string
+	proxyURL    string // 是否使用代理
+	format      string // 输出格式
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -75,6 +79,12 @@ var rootCmd = &cobra.Command{
 			connOptions = append(connOptions, edge_tts.SetProxy(proxyURL))
 		}
 
+		// 解析输出格式：--format 优先，否则从 --write-media 扩展名推断
+		resolvedFormat := resolveOutputFormat(format, writeMedia)
+		if resolvedFormat != "" {
+			connOptions = append(connOptions, edge_tts.SetOutputFormat(resolvedFormat))
+		}
+
 		conn, err := edge_tts.NewCommunicate(
 			inputText,
 			connOptions...,
@@ -95,7 +105,7 @@ var rootCmd = &cobra.Command{
 			return nil
 		}
 
-		// write mp3 file's binary data to stdout
+		// write audio binary data to stdout
 		_, err = io.Copy(os.Stdout, bytes.NewReader(audioData))
 		if err != nil {
 			return err
@@ -103,6 +113,23 @@ var rootCmd = &cobra.Command{
 
 		return nil
 	},
+}
+
+// resolveOutputFormat 解析输出格式：--format 优先，否则从文件扩展名推断
+func resolveOutputFormat(flagFormat, writeMediaPath string) string {
+	// --format 显式指定优先
+	if flagFormat != "" {
+		return flagFormat
+	}
+	// 从 --write-media 扩展名推断
+	if writeMediaPath != "" {
+		ext := strings.ToLower(filepath.Ext(writeMediaPath))
+		switch ext {
+		case ".webm":
+			return edge_tts.OutputFormatWebM
+		}
+	}
+	return ""
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -126,6 +153,7 @@ func init() {
 	rootCmd.Flags().StringVar(&writeMedia, "write-media", "", "send media output to file instead of stdout")
 	rootCmd.Flags().StringVar(&proxyURL, "proxy", "", "use a proxy for TTS and voice list")
 	rootCmd.Flags().BoolVar(&listVoices, "list-voices", false, "lists available voices and exits")
+	rootCmd.Flags().StringVar(&format, "format", "", "output format: mp3 (default), mp3-hq, webm")
 
 	rootCmd.AddCommand(webCmd)
 }

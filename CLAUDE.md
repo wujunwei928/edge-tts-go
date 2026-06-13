@@ -64,3 +64,17 @@ go test ./edge_tts/ -run TestFuncName -timeout 30s
 - Web UI 通过 `embed.FS` 嵌入，无需外部静态文件服务
 - 无 Makefile，构建直接使用 `go build`
 - CI 通过推送 `0.*` 格式 tag 触发跨平台构建（linux/windows/darwin amd64）
+
+## Agent skills
+
+### Issue tracker
+
+Issues tracked via GitHub Issues (`wujunwei928/edge-tts-go`). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Using default triage label vocabulary (needs-triage, needs-info, ready-for-agent, ready-for-human, wontfix). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context layout — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

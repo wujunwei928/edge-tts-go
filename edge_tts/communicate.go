@@ -27,6 +27,7 @@ type Communicate struct {
 	pitch          string
 	proxy          string
 	receiveTimeout int
+	outputFormat   string
 }
 
 type CommunicateOption func(*Communicate) error
@@ -206,6 +207,7 @@ func NewCommunicate(text string, options ...CommunicateOption) (*Communicate, er
 		pitch:          "+0Hz",
 		proxy:          "",
 		receiveTimeout: 10,
+		outputFormat:   OutputFormatMP3,
 	}
 
 	for _, option := range options {
@@ -379,7 +381,7 @@ func (c *Communicate) getCommandRequestContent() string {
 	var builder strings.Builder
 
 	// 拼接X-Timestamp部分
-	builder.WriteString(fmt.Sprintf("X-Timestamp:%s\r\n", dateToString()))
+	fmt.Fprintf(&builder, "X-Timestamp:%s\r\n", dateToString())
 
 	// 拼接Content-Type部分
 	builder.WriteString("Content-Type:application/json; charset=utf-8\r\n")
@@ -388,9 +390,10 @@ func (c *Communicate) getCommandRequestContent() string {
 	builder.WriteString("Path:speech.config\r\n\r\n")
 
 	// 拼接JSON部分
+	edgeFormat := edgeOutputFormats[c.outputFormat]
 	builder.WriteString(`{"context":{"synthesis":{"audio":{"metadataoptions":{`)
 	builder.WriteString(`"sentenceBoundaryEnabled":"false","wordBoundaryEnabled":"true"},`)
-	builder.WriteString(`"outputFormat":"audio-24khz-48kbitrate-mono-mp3"`)
+	fmt.Fprintf(&builder, `"outputFormat":"%s"`, edgeFormat)
 	builder.WriteString("}}}}\r\n")
 
 	return builder.String()

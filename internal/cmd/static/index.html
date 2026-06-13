@@ -402,6 +402,14 @@
                 <label>音调: <span id="pitchValue">+0Hz</span></label>
                 <input type="range" id="pitchSlider" min="-50" max="50" value="0">
             </div>
+            <div class="form-group">
+                <label for="formatSelect">输出格式</label>
+                <select id="formatSelect">
+                    <option value="mp3">MP3（默认，48kbps）</option>
+                    <option value="mp3-hq">MP3 高质量（96kbps）</option>
+                    <option value="webm">WebM（Opus）</option>
+                </select>
+            </div>
             <button id="generateBtn" class="btn-primary">生成并播放</button>
             <div id="errorMsg" class="error-msg" style="display:none"></div>
             <audio id="audioPlayer" style="display:none"></audio>
@@ -561,7 +569,8 @@
                 voice: voiceSelect.value,
                 rate: formatPercent(rateSlider.value),
                 volume: formatPercent(volumeSlider.value),
-                pitch: formatHz(pitchSlider.value)
+                pitch: formatHz(pitchSlider.value),
+                format: document.getElementById('formatSelect').value
             };
 
             try {

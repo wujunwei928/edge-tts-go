@@ -26,6 +26,7 @@ type ttsRequest struct {
 	Rate   string `json:"rate"`
 	Volume string `json:"volume"`
 	Pitch  string `json:"pitch"`
+	Format string `json:"format"` // 输出格式：mp3（默认）、mp3-hq、webm
 }
 
 // handleIndex 返回内嵌的 HTML 页面
@@ -50,7 +51,7 @@ func handleVoices(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(voices)
 }
 
-// handleTTS 接收文本参数，返回 MP3 音频流
+// handleTTS 接收文本参数，返回音频流
 func handleTTS(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "仅支持 POST", http.StatusMethodNotAllowed)
@@ -79,6 +80,11 @@ func handleTTS(w http.ResponseWriter, r *http.Request) {
 		options = append(options, edge_tts.SetProxy(webProxy))
 	}
 
+	// 设置输出格式
+	if req.Format != "" {
+		options = append(options, edge_tts.SetOutputFormat(req.Format))
+	}
+
 	conn, err := edge_tts.NewCommunicate(req.Text, options...)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("创建连接失败: %v", err), http.StatusInternalServerError)
@@ -91,8 +97,9 @@ func handleTTS(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "audio/mpeg")
-	w.Header().Set("Content-Disposition", "inline; filename=\"tts.mp3\"")
+	// 根据格式动态设置响应头
+	w.Header().Set("Content-Type", conn.GetContentType())
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"tts%s\"", conn.GetFileExtension()))
 	w.Write(audioData)
 }
 
