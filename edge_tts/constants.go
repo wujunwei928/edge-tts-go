@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	PackageVersion = "0.0.1" // edge-tts-go 包版本
+	PackageVersion = "0.0.2" // edge-tts-go 包版本
 )
 
 // edge tts 相关接口
